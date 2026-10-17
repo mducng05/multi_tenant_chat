@@ -100,7 +100,7 @@ exports.chat = (req, res) => {
   }
 
   // 4.5. CẢNH BÁO CẢM XÚC TIÊU CỰC & CHUYỂN GIAO KHẨN CẤP (Sentiment Escalation - PRD BA-07)
-  const negativeKeywords = ['tệ quá', 'thất vọng', 'bực mình', 'làm ăn vớ vẩn', 'gặp người thật', 'báo công an', 'quá kém', 'tệ hại'];
+  const negativeKeywords = ['tệ quá', 'quá tệ', 'thất vọng', 'bực mình', 'bức xúc', 'khiếu nại', 'gặp quản lý', 'làm ăn vớ vẩn', 'gặp người thật', 'báo công an', 'quá kém', 'tệ hại'];
   const isNegative = negativeKeywords.some(k => lowerMsg.includes(k));
 
   if (isNegative) {
@@ -124,6 +124,7 @@ exports.chat = (req, res) => {
       ok: true,
       sessionId: currentSessionId,
       reply: escalateReply,
+      status: 'escalated',
       sentiment: 'negative',
       isEscalated: true
     });

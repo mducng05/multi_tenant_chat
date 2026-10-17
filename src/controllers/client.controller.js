@@ -141,3 +141,174 @@ exports.getLeads = (req, res) => {
   const leads = db.getLeadsByClient(req.clientId); // Lọc tuyệt đối theo clientId
   return res.json({ ok: true, total: leads.length, leads });
 };
+
+// POST /api/client/register-client (Khách tự đăng ký doanh nghiệp & mua gói từ Landing Page)
+exports.registerClient = (req, res) => {
+  const { company_name, email, username, password, plan_id, phone } = req.body;
+  if (!company_name || !username || !password || !plan_id) {
+    return res.status(400).json({ ok: false, message: 'Vui lòng điền đầy đủ tên doanh nghiệp, username, password và chọn gói' });
+  }
+
+  const existing = db.clients.find(c => c.username === username || (email && c.email === email));
+  if (existing) {
+    return res.status(400).json({ ok: false, message: 'Tên đăng nhập hoặc email này đã tồn tại' });
+  }
+
+  const plan = db.getPlanById(plan_id) || db.subscriptionPlans[0];
+  const clientId = `HN-${Date.now().toString().slice(-6)}`;
+  const planEnd = new Date();
+  planEnd.setDate(planEnd.getDate() + (plan.duration_days || 30));
+
+  const newClient = {
+    _id: `client_${Date.now()}`,
+    clientId,
+    company_name,
+    email: email || `${username}@tenant.goquestx.com`,
+    phone: phone || '',
+    username,
+    password,
+    subscription_plan_id: plan._id,
+    subscription_plan_end: planEnd.toISOString(),
+    status: 'active',
+    widget_config: {
+      color: '#2563eb',
+      action_color: '#1d4ed8',
+      avatar: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100',
+      welcome_message: `Xin chào! Tôi là trợ lý AI của ${company_name}. Tôi có thể giúp gì cho bạn?`,
+      require_lead_form: true,
+      profanity_words: ['lừa đảo', 'chửi bậy', 'ngu ngốc']
+    },
+    api_keys: { openai: '', gemini: '' },
+    ai_provider: 'openai',
+    chatMode: 'bot'
+  };
+
+  db.clients.push(newClient);
+
+  // Tạo luôn yêu cầu đăng ký vào clientRegistrations để Super Admin theo dõi
+  db.clientRegistrations.push({
+    _id: `reg_${Date.now()}`,
+    name: company_name,
+    email: newClient.email,
+    phone: phone || '',
+    domain: req.body.domain || 'mysite.com',
+    plan_id: plan._id,
+    status: 'approved',
+    notes: 'Khách tự đăng ký và kích hoạt trực tiếp từ Landing Page',
+    createdAt: new Date().toISOString()
+  });
+
+  // Tạo hóa đơn VietQR tương ứng
+  const invoiceCode = `INV-${Date.now().toString().slice(-5)}`;
+  const invoice = {
+    _id: `inv_${Date.now()}`,
+    invoiceCode,
+    clientId,
+    planId: plan._id,
+    planName: plan.name,
+    amount: plan.price,
+    paymentMethod: 'vietqr',
+    status: 'pending',
+    createdAt: new Date().toISOString()
+  };
+  db.invoices.push(invoice);
+
+  const qrUrl = `https://img.vietqr.io/image/MB-0339888999-compact2.png?amount=${plan.price}&addInfo=${invoiceCode}&accountName=HOMENEST%20SAAS`;
+
+  // Tự động cấp Token đăng nhập luôn
+  const token = jwt.sign(
+    { id: newClient._id, clientId: newClient.clientId, role: 'client_owner', username: newClient.username },
+    JWT_SECRET,
+    { expiresIn: '7d' }
+  );
+
+  return res.status(201).json({
+    ok: true,
+    message: 'Đăng ký doanh nghiệp thành công!',
+    token,
+    client: {
+      clientId: newClient.clientId,
+      company_name: newClient.company_name,
+      username: newClient.username
+    },
+    invoice: {
+      invoiceCode,
+      amount: plan.price,
+      qrUrl,
+      planName: plan.name
+    }
+  });
+};
+
+// GET /api/client/plans
+exports.getPlans = (req, res) => {
+  return res.json({ ok: true, plans: db.subscriptionPlans });
+};
+
+// POST /api/client/support (Client gửi ticket hỗ trợ)
+exports.createSupportTicket = (req, res) => {
+  const { subject, message } = req.body;
+  if (!subject || !message) {
+    return res.status(400).json({ ok: false, message: 'Thiếu tiêu đề hoặc nội dung yêu cầu hỗ trợ' });
+  }
+
+  const ticketId = `TCK-${Date.now().toString().slice(-4)}`;
+  const ticket = {
+    _id: `ticket_${Date.now()}`,
+    ticketId,
+    clientId: req.clientId,
+    subject,
+    status: 'open',
+    created_at: new Date().toISOString(),
+    responses: [
+      {
+        message,
+        admin: false,
+        created_at: new Date().toISOString()
+      }
+    ]
+  };
+
+  db.supportTickets.push(ticket);
+  return res.status(201).json({ ok: true, message: 'Gửi ticket hỗ trợ thành công', ticket });
+};
+
+// GET /api/client/support-tickets
+exports.getSupportTickets = (req, res) => {
+  const tickets = db.getTicketsByClient(req.clientId);
+  return res.json({ ok: true, tickets });
+};
+
+// POST /api/client/support-tickets/:ticketId/reply
+exports.replySupportTicket = (req, res) => {
+  const ticket = db.supportTickets.find(t => (t.ticketId === req.params.ticketId || t._id === req.params.ticketId) && t.clientId === req.clientId);
+  if (!ticket) return res.status(404).json({ ok: false, message: 'Không tìm thấy ticket' });
+
+  const { message } = req.body;
+  if (!message) return res.status(400).json({ ok: false, message: 'Thiếu nội dung phản hồi' });
+
+  ticket.responses.push({
+    message,
+    admin: false,
+    created_at: new Date().toISOString()
+  });
+
+  return res.json({ ok: true, message: 'Phản hồi thành công', ticket });
+};
+
+// GET /api/client/dashboard/today
+exports.getDashboardToday = (req, res) => {
+  const clientChats = db.getChatsByClient(req.clientId);
+  const clientLeads = db.getLeadsByClient(req.clientId);
+  const clientFiles = db.getFilesByClient(req.clientId);
+
+  return res.json({
+    ok: true,
+    today: {
+      chats_count: clientChats.length,
+      leads_count: clientLeads.length,
+      files_count: clientFiles.length,
+      bot_messages_sent: db.messages.filter(m => m.clientId === req.clientId && m.sender === 'bot').length
+    }
+  });
+};

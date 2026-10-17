@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Go QuestX - Client & Employee Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .client-layout {
+      display: flex;
+      min-height: 100vh;
+    }
+    .client-sidebar {
+      width: 270px;
+      background: #0d1527;
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+    .client-nav {
+      padding: 1rem 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      flex: 1;
+      overflow-y: auto;
+    }
+    .client-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.7rem 1rem;
+      color: var(--text-muted);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+      background: transparent;
+      border: none;
+      text-align: left;
+      width: 100%;
+    }
+    .client-nav-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+    }
+    .client-nav-item.active {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(37, 99, 235, 0.35);
+    }
+    .client-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      background: var(--bg-main);
+    }
+    .client-topbar {
+      padding: 1rem 2rem;
+      background: rgba(19, 28, 46, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .client-content {
+      padding: 2rem;
+      flex: 1;
+      overflow-y: auto;
+    }
+    /* CSKH Livechat Split Screen */
+    .cskh-grid {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 1.25rem;
+      height: 640px;
+    }
+    .cskh-sessions {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .cskh-session-list {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .cskh-session-item {
+      padding: 0.9rem 1.1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .cskh-session-item:hover { background: rgba(255, 255, 255, 0.03); }
+    .cskh-session-item.active {
+      background: rgba(37, 99, 235, 0.15);
+      border-left: 4px solid #3b82f6;
+    }
+    .cskh-session-item.escalated {
+      background: rgba(239, 68, 68, 0.15);
+      border-left: 4px solid #ef4444;
+      animation: pulseAlert 2s infinite;
+    }
+    @keyframes pulseAlert {
+      0%, 100% { background: rgba(239, 68, 68, 0.15); }
+      50% { background: rgba(239, 68, 68, 0.35); }
+    }
+    .cskh-chat-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .escalation-banner {
+      background: linear-gradient(90deg, #b91c1c, #dc2626);
+      color: #fff;
+      padding: 0.75rem 1.25rem;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 700;
+      font-size: 0.9rem;
+      animation: pulseAlert 1.5s infinite;
+    }
+    .escalation-banner.active { display: flex; }
+    .chat-messages-area {
+      flex: 1;
+      padding: 1.25rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      background: #090d16;
+    }
+    .cskh-input-box {
+      padding: 1rem;
+      background: #131c2e;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(6px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-box {
+      background: #131c2e;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      width: 500px;
+      max-width: 90vw;
+      padding: 1.75rem;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+    }
+  </style>
+</head>
+<body>
+  <div class="client-layout">
+    <!-- Sidebar -->
+    <aside class="client-sidebar">
+      <div class="sidebar-header" style="padding: 1.25rem; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 0.75rem;">
+        <div class="logo-badge" style="background: linear-gradient(135deg, #2563eb, #8b5cf6);">CL</div>
+        <div>
+          <h2 id="top-company-name" style="font-size: 1.05rem; font-weight: 700; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px;">HomeNest Real</h2>
+          <span id="top-tenant-badge" class="code-tag" style="font-size: 0.75rem;">HN-DEMO-001</span>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="client-nav">
+        <button class="client-nav-item active" data-tab="cl-overview">📊 Tổng Quan & Quota</button>
+        <button class="client-nav-item" data-tab="cl-rag">🧠 Huấn Luyện AI (RAG)</button>
+        <button class="client-nav-item" data-tab="cl-cskh">💬 CSKH & Tiếp Quản Live <span id="badge-escalated-chats" class="badge danger" style="margin-left: auto; display: none;">1</span></button>
+        <button class="client-nav-item" data-tab="cl-employees">👥 Quản Lý Nhân Sự</button>
+        <button class="client-nav-item" data-tab="cl-leads">🎯 Khách Hàng Tiềm Năng</button>
+        <button class="client-nav-item" data-tab="cl-products">🛍️ Sản Phẩm & E-commerce</button>
+        <button class="client-nav-item" data-tab="cl-widget">🎨 Cấu Hình Chatbot Widget</button>
+        <button class="client-nav-item" data-tab="cl-support">🎫 Gửi Yêu Cầu Hỗ Trợ</button>
+      </nav>
+
+      <!-- Bottom Session Info -->
+      <div style="padding: 1rem; border-top: 1px solid var(--border-color); font-size: 0.8rem; color: var(--text-muted);">
+        <div>Đăng nhập: <b id="current-user-role" style="color: #60a5fa;">Client Owner</b></div>
+        <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+          <button class="btn btn-secondary btn-sm" onclick="openLoginModal()" style="font-size: 0.75rem; flex: 1;">Đổi TK</button>
+          <a href="http://localhost:3000/store.html" target="_blank" class="btn btn-secondary btn-sm" style="font-size: 0.75rem; flex: 1; text-align: center; text-decoration: none;">Xem Store ↗</a>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="client-main">
+      <!-- Topbar -->
+      <header class="client-topbar">
+        <div>
+          <h1 id="client-view-title" style="font-size: 1.35rem; font-weight: 700;">Không Gian Làm Việc Doanh Nghiệp</h1>
+          <p class="subtitle">Độc lập dữ liệu Tenant ID: <span id="header-client-id" class="code-tag">HN-DEMO-001</span></p>
+        </div>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <span id="plan-badge-display" class="badge plan" style="font-size: 0.85rem; padding: 0.4rem 0.8rem;">Pro Plan</span>
+          <span id="status-badge-display" class="badge success" style="font-size: 0.85rem; padding: 0.4rem 0.8rem;">Active</span>
+          <button class="btn btn-primary btn-sm" onclick="openRenewalModal()">⚡ Nâng Gói / VietQR</button>
+          <a href="/admin.html" target="_blank" class="btn btn-secondary btn-sm">👑 Super Admin ↗</a>
+        </div>
+      </header>
+
+      <div class="client-content">
+
+        <!-- TAB 1: TỔNG QUAN & QUOTA -->
+        <section id="cl-overview" class="tab-pane active">
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <div class="metric-icon" style="color: #3b82f6;">👥</div>
+              <div class="metric-info">
+                <span class="label">Nhân sự (User Quota)</span>
+                <h3 id="stat-users">-- / --</h3>
+                <div class="progress-bar"><div id="progress-users" class="fill" style="width: 0%"></div></div>
+              </div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-icon" style="color: #10b981;">📚</div>
+              <div class="metric-info">
+                <span class="label">Tài liệu RAG (File Quota)</span>
+                <h3 id="stat-files">-- / --</h3>
+                <div class="progress-bar"><div id="progress-files" class="fill" style="width: 0%"></div></div>
+              </div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-icon" style="color: #f59e0b;">🎯</div>
+              <div class="metric-info">
+                <span class="label">Khách tiềm năng (Leads CRM)</span>
+                <h3 id="stat-leads">-- Leads</h3>
+                <small class="hint">Thu thập tự động từ cuộc trò chuyện</small>
+              </div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-icon" style="color: #8b5cf6;">⏳</div>
+              <div class="metric-info">
+                <span class="label">Thời Hạn Gói</span>
+                <h3 id="stat-days">-- ngày</h3>
+                <small class="hint">Đến: <span id="stat-end-date">--</span></small>
+              </div>
+            </div>
+          </div>
+
+          <div class="dashboard-grid">
+            <!-- Thẻ 1: Thông tin cấu hình -->
+            <div class="card">
+              <div class="card-header">
+                <h3>🏢 Thông Tin Hồ Sơ Doanh Nghiệp</h3>
+              </div>
+              <div class="card-body" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <div><b>Tên công ty:</b> <span id="info-company">HomeNest Real</span></div>
+                <div><b>Email liên hệ:</b> <span id="info-email">contact@homenest.vn</span></div>
+                <div><b>Chế độ Chat:</b> <span id="info-chat-mode" class="badge info">Bot Tự Động</span></div>
+                <div><b>Giới hạn nhân sự:</b> <span id="info-limit-users">10 tài khoản</span></div>
+                <div><b>Giới hạn tài liệu:</b> <span id="info-limit-files">20 files RAG</span></div>
+                <div style="margin-top: 0.5rem;">
+                  <button class="btn btn-secondary btn-sm" onclick="openRenewalModal()">Gia hạn gói qua VietQR</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Thẻ 2: Nhúng Chatbot Widget -->
+            <div class="card">
+              <div class="card-header">
+                <h3>💬 Mã Nhúng Chatbot Cho Website</h3>
+                <span class="badge live">One-Line Embed</span>
+              </div>
+              <div class="card-body">
+                <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+                  Chỉ cần dán thẻ script sau vào bất kỳ website nào (WordPress, React, PHP, HTML) để hiển thị trợ lý AI:
+                </p>
+                <textarea id="embed-code-snippet" rows="3" readonly style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; background: #090d16; color: #60a5fa;"></textarea>
+                <div style="margin-top: 0.75rem; display: flex; gap: 0.75rem;">
+                  <button class="btn btn-primary btn-sm" onclick="copyEmbedSnippet()">📋 Sao Chép Mã Nhúng</button>
+                  <a href="http://localhost:3000/store.html" target="_blank" class="btn btn-secondary btn-sm">Xem Website Mẫu Nhúng ↗</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 2: HUẤN LUYỆN AI RAG -->
+        <section id="cl-rag" class="tab-pane">
+          <div class="panel-header">
+            <div>
+              <h2>Quản Lý Tri Thức AI (RAG Pipeline & Vector Database)</h2>
+              <p class="subtitle">Nạp tài liệu, băm Vector Chunks để AI trả lời chính xác thông tin doanh nghiệp</p>
+            </div>
+          </div>
+
+          <div class="dashboard-grid">
+            <div class="card">
+              <div class="card-header">
+                <h3>📤 Tải Lên & Huấn Luyện Tài Liệu Mới</h3>
+              </div>
+              <div class="card-body">
+                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                  <input type="text" id="rag-file-name" placeholder="Tên tài liệu (VD: Bang_Gia_Can_Ho_2026.pdf)">
+                  <textarea id="rag-file-content" rows="4" placeholder="Nội dung văn bản để hệ thống băm nhỏ Vector Chunks (VD: Căn hộ 2 phòng ngủ giá từ 2.8 tỷ, hỗ trợ vay 0% lãi suất trong 18 tháng, tặng gói nội thất 50 triệu)..."></textarea>
+                  <button class="btn btn-primary" onclick="uploadKnowledgeFile()">📥 Tải Lên & Băm Vector Tự Động</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <h3>🔍 Lỗ Hổng Kiến Thức (Knowledge Gaps)</h3>
+                <span class="badge warning">Tự động phát hiện</span>
+              </div>
+              <div class="card-body" style="padding: 0;">
+                <div id="knowledge-gaps-list" style="max-height: 250px; overflow-y: auto;"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 1.5rem;">
+            <div class="card-header">
+              <h3>📚 Danh Sách Tài Liệu Đã Nạp Vào Vector DB</h3>
+            </div>
+            <div class="card-body" style="padding: 0;">
+              <div id="files-list"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 3: CSKH & LIVECHAT TIẾP QUẢN -->
+        <section id="cl-cskh" class="tab-pane">
+          <div class="panel-header">
+            <div>
+              <h2>Trung Tâm CSKH & Tiếp Quản Livechat (Optimistic Locking)</h2>
+              <p class="subtitle">Nhân viên tiếp quản hội thoại, tắt bot tự động và nhận cảnh báo khi khách giận dữ</p>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="loadConversations()">🔄 Làm Mới Hội Thoại</button>
+          </div>
+
+          <div class="cskh-grid">
+            <!-- Cột Danh Sách Hội Thoại -->
+            <div class="cskh-sessions">
+              <div style="padding: 0.85rem 1.1rem; border-bottom: 1px solid var(--border-color); font-weight: 700; font-size: 0.9rem;">
+                Danh Sách Hội Thoại Trực Tuyến
+              </div>
+              <div id="cskh-sessions-container" class="cskh-session-list"></div>
+            </div>
+
+            <!-- Cột Khung Chat Tiếp Quản -->
+            <div class="cskh-chat-panel">
+              <!-- Banner Khách Hàng Giận Dữ Escalation -->
+              <div id="cskh-escalation-alert" class="escalation-banner">
+                <div>🚨 <b>CẢNH BÁO ESCALATION:</b> Khách hàng đang phàn nàn/bức xúc (Sentiment: -0.85)!</div>
+                <button class="btn btn-secondary btn-sm" style="background:#fff; color:#b91c1c; font-weight:700;" onclick="takeOverCurrentSession()">TIẾP QUẢN NGAY</button>
+              </div>
+
+              <!-- Top Panel Bar -->
+              <div style="padding: 0.85rem 1.25rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: #131c2e;">
+                <div>
+                  <span id="active-chat-title" style="font-weight: 700;">Chọn một cuộc trò chuyện</span>
+                  <div id="active-chat-sub" style="font-size: 0.8rem; color: var(--text-muted);">Trạng thái: --</div>
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                  <button id="btn-take-over" class="btn btn-primary btn-sm" onclick="takeOverCurrentSession()">👨‍💼 Tiếp Quản (Khóa Bot)</button>
+                  <button id="btn-resolve-chat" class="btn btn-secondary btn-sm" onclick="resolveCurrentSession()">✅ Đã Xử Lý Xong</button>
+                </div>
+              </div>
+
+              <!-- Chat Messages Thread -->
+              <div id="cskh-messages-box" class="chat-messages-area"></div>
+
+              <!-- Input Area -->
+              <div class="cskh-input-box">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="font-size: 0.8rem; color: var(--text-muted);">Nhân viên phản hồi trực tiếp:</span>
+                  <button class="btn btn-secondary btn-sm" style="font-size: 0.75rem;" onclick="aiPolishDraft()">✨ AI Chuốt Lời (Polish)</button>
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                  <input type="text" id="cskh-reply-input" placeholder="Nhập câu trả lời gửi đến khách hàng..." style="flex: 1;">
+                  <button class="btn btn-primary" onclick="sendStaffReply()">Gửi</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 4: QUẢN LÝ NHÂN SỰ -->
+        <section id="cl-employees" class="tab-pane">
+          <div class="panel-header">
+            <div>
+              <h2>Quản Lý Nhân Sự (Employee Accounts)</h2>
+              <p class="subtitle">Tạo tài khoản nhân viên CSKH (Tuân thủ nghiêm ngặt User Quota của Gói Cước)</p>
+            </div>
+            <button class="btn btn-primary" onclick="openCreateEmployeeModal()">➕ Thêm Nhân Viên Mới</button>
+          </div>
+
+          <div class="data-table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Mã Nhân Viên</th>
+                  <th>Họ Tên</th>
+                  <th>Username</th>
+                  <th>Vai Trò</th>
+                  <th>Mã Tenant</th>
+                  <th>Ngày Tạo</th>
+                </tr>
+              </thead>
+              <tbody id="employees-table-body">
+                <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Đang tải danh sách nhân viên...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- TAB 5: KHÁCH TIỀM NĂNG (LEADS CRM) -->
+        <section id="cl-leads" class="tab-pane">
+          <div class="panel-header">
+            <div>
+              <h2>Dữ Liệu Khách Hàng Tiềm Năng (Leads CRM)</h2>
+              <p class="subtitle">AI tự động nhận diện Họ tên, SĐT, Email từ cuộc trò chuyện (Slot-filling & Lead form)</p>
+            </div>
+            <button class="btn btn-secondary" onclick="loadLeadsList()">🔄 Làm Mới Leads</button>
+          </div>
+
+          <div class="data-table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Khách Hàng</th>
+                  <th>Số Điện Thoại</th>
+                  <th>Email</th>
+                  <th>Nhu Cầu / Ghi Chú</th>
+                  <th>Mã Session</th>
+                  <th>Ngày Thu Thập</th>
+                </tr>
+              </thead>
+              <tbody id="leads-table-body">
+                <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Đang tải danh sách Leads...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- TAB 6: SẢN PHẨM & E-COMMERCE -->
+        <section id="cl-products" class="tab-pane">
+          <div class="panel-header">
+            <div>
+              <h2>Danh Mục Sản Phẩm (Conversational Commerce)</h2>
+              <p class="subtitle">AI sẽ tự động gửi Thẻ Băng Chuyền (Product Carousel) khi khách hỏi mua</p>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+              <button class="btn btn-secondary" onclick="triggerWebCrawler()">🕷️ Cào Dữ Liệu Web (Crawler)</button>
+              <button class="btn btn-primary" onclick="openCreateProductModal()">➕ Thêm Sản Phẩm Mới</button>
+            </div>
+          </div>
+
+          <div class="data-table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Hình Ảnh</th>
+                  <th>Tên Sản Phẩm</th>
+                  <th>Giá Bán (VNĐ)</th>
+                  <th>Danh Mục</th>
+                  <th>Trạng Thái</th>
+                  <th>Thao Tác</th>
+                </tr>
+              </thead>
+              <tbody id="products-table-body">
+                <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Đang tải danh mục sản phẩm...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- TAB 7: CẤU HÌNH WIDGET -->
+        <section id="cl-widget" class="tab-pane">
+          <div class="panel-header">
+            <div>
+              <h2>Tùy Biến Giao Diện Chatbot Widget</h2>
+              <p class="subtitle">Thiết lập màu sắc thương hiệu, câu chào, bộ lọc từ khóa phản cảm (Profanity Filter)</p>
+            </div>
+            <button class="btn btn-primary" onclick="saveWidgetConfig()">💾 Lưu Cấu Hình Widget</button>
+          </div>
+
+          <div class="dashboard-grid">
+            <div class="card">
+              <div class="card-header">
+                <h3>🎨 Tùy Chỉnh Màu Sắc & Lời Chào</h3>
+              </div>
+              <div class="card-body" style="display: flex; flex-direction: column; gap: 1rem;">
+                <div>
+                  <label style="font-size: 0.85rem; color: var(--text-muted);">Màu Chủ Đạo Thương Hiệu (Launcher & Header):</label>
+                  <div style="display: flex; gap: 0.75rem; align-items: center; margin-top: 0.35rem;">
+                    <input type="color" id="cfg-color" value="#2563eb" style="width: 50px; height: 38px; border: none; cursor: pointer;">
+                    <input type="text" id="cfg-color-text" value="#2563eb" style="width: 120px;">
+                  </div>
+                </div>
+                <div>
+                  <label style="font-size: 0.85rem; color: var(--text-muted);">Màu Nút Hành Động (Action Color):</label>
+                  <div style="display: flex; gap: 0.75rem; align-items: center; margin-top: 0.35rem;">
+                    <input type="color" id="cfg-action-color" value="#1d4ed8" style="width: 50px; height: 38px; border: none; cursor: pointer;">
+                    <input type="text" id="cfg-action-color-text" value="#1d4ed8" style="width: 120px;">
+                  </div>
+                </div>
+                <div>
+                  <label style="font-size: 0.85rem; color: var(--text-muted);">Lời Chào Khởi Tạo Khi Mở Chat:</label>
+                  <textarea id="cfg-welcome" rows="3"></textarea>
+                </div>
+                <div>
+                  <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                    <input type="checkbox" id="cfg-require-lead" checked>
+                    <span>Yêu cầu điền biểu mẫu Họ tên & SĐT trước khi bắt đầu chat</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <h3>🛡️ Bộ Lọc Từ Ngữ Phản Cảm (Profanity Filter)</h3>
+              </div>
+              <div class="card-body">
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+                  Khi khách gõ các từ này, hệ thống sẽ tự động nhắc nhở chuẩn mực giao tiếp:
+                </p>
+                <textarea id="cfg-profanity" rows="4" placeholder="lừa đảo, chửi bậy, ngu ngốc (phân cách bằng dấu phẩy)"></textarea>
+                <div style="margin-top: 1rem; padding: 1rem; background: #090d16; border-radius: var(--radius-md); font-size: 0.85rem;">
+                  💡 <b>Lưu ý:</b> Các từ phàn nàn về dịch vụ (như "tệ quá", "thất vọng") sẽ tự động kích hoạt <b>Sentiment Escalation</b> sang Nhân viên CSKH thay vì coi là từ tục tĩu.
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 8: GỬI YÊU CẦU HỖ TRỢ -->
+        <section id="cl-support" class="tab-pane">
+          <div class="panel-header">
+            <div>
+              <h2>Yêu Cầu Hỗ Trợ Kỹ Thuật (Gửi Đến Super Admin)</h2>
+              <p class="subtitle">Báo cáo sự cố, đề xuất tính năng hoặc yêu cầu nâng cấp hạn mức trực tiếp</p>
+            </div>
+            <button class="btn btn-primary" onclick="openCreateTicketModal()">➕ Tạo Ticket Hỗ Trợ Mới</button>
+          </div>
+
+          <div class="data-table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Mã Ticket</th>
+                  <th>Tiêu Đề</th>
+                  <th>Ngày Gửi</th>
+                  <th>Trạng Thái</th>
+                  <th>Số Phản Hồi</th>
+                  <th>Thao Tác</th>
+                </tr>
+              </thead>
+              <tbody id="client-tickets-table-body">
+                <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Đang tải danh sách tickets...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- MODAL: ĐĂNG NHẬP / CHUYỂN TÀI KHOẢN -->
+  <div id="modal-login" class="modal-overlay">
+    <div class="modal-box">
+      <h3 style="margin-bottom: 1.25rem;">🔐 Đăng Nhập Doanh Nghiệp / Nhân Viên</h3>
+      <div style="display: flex; flex-direction: column; gap: 0.9rem;">
+        <div>
+          <label style="font-size: 0.85rem; color: var(--text-muted);">Tài khoản:</label>
+          <input type="text" id="login-username" value="client_demo">
+        </div>
+        <div>
+          <label style="font-size: 0.85rem; color: var(--text-muted);">Mật khẩu:</label>
+          <input type="password" id="login-password" value="ClientPass123">
+        </div>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+        <button class="btn btn-secondary" onclick="closeModal('modal-login')">Hủy</button>
+        <button class="btn btn-primary" onclick="submitClientLogin()">Đăng Nhập</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: TẠO NHÂN VIÊN MỚI -->
+  <div id="modal-create-employee" class="modal-overlay">
+    <div class="modal-box">
+      <h3 style="margin-bottom: 1.25rem;">👥 Thêm Tài Khoản Nhân Viên Mới</h3>
+      <div style="display: flex; flex-direction: column; gap: 0.9rem;">
+        <div>
+          <label style="font-size: 0.85rem; color: var(--text-muted);">Họ và tên:</label>
+          <input type="text" id="new-emp-fullname" placeholder="Nguyễn Văn A">
+        </div>
+        <div>
+          <label style="font-size: 0.85rem; color: var(--text-muted);">Username đăng nhập:</label>
+          <input type="text" id="new-emp-username" placeholder="emp_tuvan01">
+        </div>
+        <div>
+          <label style="font-size: 0.85rem; color: var(--text-muted);">Mật khẩu:</label>
+          <input type="password" id="new-emp-password" placeholder="Pass123@">
+        </div>
+        <div>
+          <label style="font-size: 0.85rem; color: var(--text-muted);">Vai trò:</label>
+          <select id="new-emp-role" style="width: 100%; background: var(--bg-input); color: #fff; border: 1px solid var(--border-color); padding: 0.75rem; border-radius: var(--radius-md);">
+            <option value="staff">Nhân viên CSKH (Staff)</option>
+            <option value="manager">Quản lý (Manager)</option>
+          </select>
+        </div>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+        <button class="btn btn-secondary" onclick="closeModal('modal-create-employee')">Hủy</button>
+        <button class="btn btn-primary" onclick="submitCreateEmployee()">Tạo Tài Khoản</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: GIA HẠN GÓI / VIETQR -->
+  <div id="modal-renewal" class="modal-overlay">
+    <div class="modal-box" style="text-align: center;">
+      <h3 style="margin-bottom: 0.75rem;">⚡ Nâng Cấp / Gia Hạn Gói Dịch Vụ</h3>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+        Quét mã VietQR bằng bất kỳ App ngân hàng nào (MB, VCB, Techcombank) để kích hoạt ngay:
+      </p>
+      <div id="vietqr-container" style="background: #fff; padding: 1rem; border-radius: 12px; display: inline-block; margin-bottom: 1rem;">
+        <img id="vietqr-image" src="" alt="VietQR" style="width: 240px; height: 240px; display: block;">
+      </div>
+      <div style="text-align: left; background: #090d16; padding: 1rem; border-radius: 8px; font-size: 0.88rem; margin-bottom: 1.25rem;">
+        <div><b>Ngân hàng:</b> MB Bank (Quân Đội)</div>
+        <div><b>Số tài khoản:</b> 0339888999</div>
+        <div><b>Số tiền:</b> <span id="vietqr-amount" style="color: #f59e0b; font-weight: 700;">1.490.000 đ</span></div>
+        <div><b>Nội dung chuyển khoản:</b> <code id="vietqr-memo" style="color: #60a5fa;">INV-9999</code></div>
+      </div>
+      <div style="display: flex; justify-content: center; gap: 0.75rem;">
+        <button class="btn btn-secondary" onclick="closeModal('modal-renewal')">Đóng</button>
+        <button class="btn btn-primary" onclick="simulateIpnSuccess()">✅ Giả Lập Ngân Hàng Xác Nhận (IPN Webhook)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: TẠO TICKET HỖ TRỢ -->
+  <div id="modal-create-ticket" class="modal-overlay">
+    <div class="modal-box">
+      <h3 style="margin-bottom: 1.25rem;">🎫 Gửi Yêu Cầu Hỗ Trợ Đến Super Admin</h3>
+      <div style="display: flex; flex-direction: column; gap: 0.9rem;">
+        <div>
+          <label style="font-size: 0.85rem; color: var(--text-muted);">Tiêu đề vấn đề:</label>
+          <input type="text" id="ticket-subject" placeholder="VD: Yêu cầu mở rộng Quota nhân sự...">
+        </div>
+        <div>
+          <label style="font-size: 0.85rem; color: var(--text-muted);">Mô tả chi tiết:</label>
+          <textarea id="ticket-message" rows="4" placeholder="Nhập chi tiết nội dung cần trợ giúp kỹ thuật..."></textarea>
+        </div>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+        <button class="btn btn-secondary" onclick="closeModal('modal-create-ticket')">Hủy</button>
+        <button class="btn btn-primary" onclick="submitCreateTicket()">Gửi Ticket</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: XEM & PHẢN HỒI TICKET -->
+  <div id="modal-client-ticket-detail" class="modal-overlay">
+    <div class="modal-box" style="width: 580px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+        <h3 id="cl-ticket-detail-title">🎫 Chi Tiết Ticket</h3>
+        <span id="cl-ticket-detail-status" class="badge">Open</span>
+      </div>
+      <p id="cl-ticket-detail-subject" style="font-weight: 600; color: #60a5fa; margin-bottom: 0.75rem;"></p>
+      
+      <div id="cl-ticket-messages-box" style="max-height: 250px; overflow-y: auto; background: #090d16; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1rem;"></div>
+
+      <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+        <textarea id="cl-ticket-reply-text" rows="2" placeholder="Gửi câu trả lời thêm đến Super Admin..."></textarea>
+        <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+          <button class="btn btn-secondary" onclick="closeModal('modal-client-ticket-detail')">Đóng</button>
+          <button class="btn btn-primary" onclick="submitClientTicketReply()">Gửi Trả Lời</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: THÊM SẢN PHẨM -->
+  <div id="modal-create-product" class="modal-overlay">
+    <div class="modal-box">
+      <h3 style="margin-bottom: 1.25rem;">🛍️ Thêm Sản Phẩm Mới Vào Danh Mục</h3>
+      <div style="display: flex; flex-direction: column; gap: 0.9rem;">
+        <div>
+          <label style="font-size: 0.85rem; color: var(--text-muted);">Tên sản phẩm:</label>
+          <input type="text" id="prod-name" placeholder="VD: Khóa Cửa Thông Minh SmartLock X1">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+          <div>
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Giá bán (VNĐ):</label>
+            <input type="number" id="prod-price" placeholder="4500000">
+          </div>
+          <div>
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Danh mục:</label>
+            <input type="text" id="prod-category" placeholder="Smart Home">
+          </div>
+        </div>
+        <div>
+          <label style="font-size: 0.85rem; color: var(--text-muted);">URL Hình ảnh:</label>
+          <input type="text" id="prod-image" placeholder="https://images.unsplash.com/...">
+        </div>
+        <div>
+          <label style="font-size: 0.85rem; color: var(--text-muted);">Mô tả sản phẩm:</label>
+          <textarea id="prod-description" rows="2" placeholder="Mở khóa vân tay, thẻ từ, mã số, kết nối điện thoại..."></textarea>
+        </div>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+        <button class="btn btn-secondary" onclick="closeModal('modal-create-product')">Hủy</button>
+        <button class="btn btn-primary" onclick="submitCreateProduct()">Lưu Sản Phẩm</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="client.js"></script>
+</body>
+</html>

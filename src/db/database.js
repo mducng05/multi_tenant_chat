@@ -16,8 +16,10 @@ class Database {
     this.customers = [];
     this.invoices = [];
     this.unansweredFaqs = [];
-    this.knowledgeGaps = [];
     this.products = [];
+    this.knowledgeGaps = [];
+    this.clientRegistrations = [];
+    this.supportTickets = [];
 
     this.seedInitialData();
   }
@@ -224,6 +226,54 @@ class Database {
       suggested_answer: 'Dự án được Ngân hàng Quân Đội (MB) bảo lãnh tiến độ 100%. Hiện tại phần móng đã hoàn thành nghiệm thu vào Quý 1/2026.',
       createdAt: new Date().toISOString()
     });
+
+    // 9. Client Registrations (Yêu cầu đăng ký từ Landing Page - OAS 3.0)
+    this.clientRegistrations.push(
+      {
+        _id: 'reg_01',
+        name: 'Công ty Công Nghệ TechLand',
+        email: 'contact@techland.vn',
+        phone: '0908123456',
+        domain: 'techland.vn',
+        plan_id: 'plan_pro',
+        status: 'pending', // pending | approved | rejected
+        notes: 'Chờ đối soát thanh toán gói Pro',
+        createdAt: new Date(Date.now() - 3600000 * 2).toISOString()
+      },
+      {
+        _id: 'reg_02',
+        name: 'Chuỗi Thời Trang Stella Chic',
+        email: 'sales@stellachic.vn',
+        phone: '0933456789',
+        domain: 'stellachic.vn',
+        plan_id: 'plan_basic',
+        status: 'approved',
+        notes: 'Đã duyệt và cấp mã HN-889911',
+        createdAt: new Date(Date.now() - 86400000).toISOString()
+      }
+    );
+
+    // 10. Support Tickets (OAS 3.0)
+    this.supportTickets.push({
+      _id: 'ticket_01',
+      ticketId: 'TCK-1092',
+      clientId: 'HN-DEMO-001',
+      subject: 'Hỏi về việc băm vector tài liệu PDF scan hình ảnh',
+      status: 'open', // open | closed
+      created_at: new Date(Date.now() - 3600000 * 4).toISOString(),
+      responses: [
+        {
+          message: 'Chào Admin, tôi upload file PDF scan hóa đơn thì bot báo không đọc được text. Cần làm thế nào?',
+          admin: false,
+          created_at: new Date(Date.now() - 3600000 * 4).toISOString()
+        },
+        {
+          message: 'Chào bạn, hiện tại hệ thống chỉ đọc được PDF dạng Text. Nếu file scan, bạn vui lòng OCR chuyển sang text trước khi tải lên nhé.',
+          admin: true,
+          created_at: new Date(Date.now() - 3600000 * 3).toISOString()
+        }
+      ]
+    });
   }
 
   // --- Multi-Tenant Query Helpers ---
@@ -254,6 +304,10 @@ class Database {
 
   getGapsByClient(clientId) {
     return this.knowledgeGaps.filter(g => g.clientId === clientId);
+  }
+
+  getTicketsByClient(clientId) {
+    return this.supportTickets.filter(t => t.clientId === clientId);
   }
 
   getPlanById(planId) {

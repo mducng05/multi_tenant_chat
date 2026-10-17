@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Go QuestX - Super Admin Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .admin-layout {
+      display: flex;
+      min-height: 100vh;
+    }
+    .admin-sidebar {
+      width: 270px;
+      background: #0f172a;
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+    .sidebar-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+    .admin-nav {
+      padding: 1rem 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      flex: 1;
+    }
+    .admin-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      color: var(--text-muted);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.92rem;
+      transition: all 0.2s ease;
+      background: transparent;
+      border: none;
+      text-align: left;
+      width: 100%;
+    }
+    .admin-nav-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+    }
+    .admin-nav-item.active {
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(37, 99, 235, 0.35);
+    }
+    .admin-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      background: var(--bg-main);
+    }
+    .admin-topbar {
+      padding: 1rem 2rem;
+      background: rgba(19, 28, 46, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .admin-content {
+      padding: 2rem;
+      flex: 1;
+      overflow-y: auto;
+    }
+    .data-table-container {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      overflow-x: auto;
+      box-shadow: var(--shadow-card);
+    }
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.9rem;
+    }
+    .data-table th {
+      background: rgba(255, 255, 255, 0.03);
+      padding: 1rem 1.25rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      border-bottom: 1px solid var(--border-color);
+      white-space: nowrap;
+    }
+    .data-table td {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      vertical-align: middle;
+    }
+    .data-table tr:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(6px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-box {
+      background: #131c2e;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      width: 520px;
+      max-width: 90vw;
+      padding: 1.75rem;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+      animation: fadeIn 0.25s ease;
+    }
+    .ticket-responses {
+      max-height: 250px;
+      overflow-y: auto;
+      background: #090d16;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .ticket-msg {
+      padding: 0.6rem 0.9rem;
+      border-radius: var(--radius-md);
+      font-size: 0.88rem;
+    }
+    .ticket-msg.admin {
+      background: #1e3a5f;
+      color: #93c5fd;
+      border: 1px solid #2563eb;
+      align-self: flex-end;
+      max-width: 80%;
+    }
+    .ticket-msg.client {
+      background: #1e293b;
+      color: #f1f5f9;
+      border: 1px solid #334155;
+      align-self: flex-start;
+      max-width: 80%;
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-layout">
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+      <div class="sidebar-header">
+        <div class="logo-badge" style="background: linear-gradient(135deg, #ef4444, #f59e0b);">SA</div>
+        <div class="brand-text">
+          <h2 style="font-size: 1.15rem; font-weight: 700; margin: 0;">Go QuestX</h2>
+          <span class="badge danger">Super Admin</span>
+        </div>
+      </div>
+      <nav class="admin-nav">
+        <button class="admin-nav-item active" data-tab="adm-overview">📊 Tổng Quan KPI</button>
+        <button class="admin-nav-item" data-tab="adm-tenants">🏢 Quản Lý Doanh Nghiệp</button>
+        <button class="admin-nav-item" data-tab="adm-plans">💳 Quản Lý Gói Cước</button>
+        <button class="admin-nav-item" data-tab="adm-registrations">📝 Duyệt Đăng Ký Gói <span id="badge-pending-reg" class="badge warning" style="margin-left: auto; display: none;">0</span></button>
+        <button class="admin-nav-item" data-tab="adm-tickets">🎫 Trung Tâm Hỗ Trợ <span id="badge-open-tickets" class="badge danger" style="margin-left: auto; display: none;">0</span></button>
+        <button class="admin-nav-item" data-tab="adm-logs">⚡ Nhật Ký API Console</button>
+      </nav>
+      <div style="padding: 1rem; border-top: 1px solid var(--border-color); font-size: 0.8rem; color: var(--text-muted);">
+        <div>API Server: <span class="badge live">Port 5000</span></div>
+        <div style="margin-top: 4px;">Public Web: <a href="http://localhost:3000" target="_blank" style="color: #60a5fa; text-decoration: none;">Port 3000 ↗</a></div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="admin-main">
+      <!-- Top Bar -->
+      <header class="admin-topbar">
+        <div>
+          <h1 id="page-title" style="font-size: 1.35rem; font-weight: 700;">Bảng Điều Khiển Quản Trị Hệ Thống</h1>
+          <p class="subtitle">Giám sát Multi-Tenant SaaS, Hóa đơn VietQR và Trung tâm Ticket</p>
+        </div>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <a href="/client.html" class="btn btn-secondary" style="font-size: 0.85rem;" target="_blank">🏢 Vào Tenant Portal ↗</a>
+          <a href="/api-docs" class="btn btn-secondary" style="font-size: 0.85rem;" target="_blank">📖 Swagger Docs ↗</a>
+          <div style="display: flex; align-items: center; gap: 0.6rem; padding-left: 0.5rem; border-left: 1px solid var(--border-color);">
+            <img id="admin-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100" style="width: 38px; height: 38px; border-radius: 50%; border: 2px solid #ef4444;" alt="Admin">
+            <div>
+              <div id="admin-name" style="font-weight: 700; font-size: 0.9rem;">Super Admin</div>
+              <div style="font-size: 0.75rem; color: #10b981;">● Online</div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="admin-content">
+
+        <!-- TAB 1: TỔNG QUAN KPI -->
+        <section id="adm-overview" class="tab-pane active">
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <div class="metric-icon" style="color: #3b82f6;">🏢</div>
+              <div class="metric-info">
+                <span class="label">Tổng Doanh Nghiệp (Tenants)</span>
+                <h3 id="stat-total-clients">--</h3>
+                <small class="hint"><span id="stat-active-clients" style="color: #10b981; font-weight: 600;">--</span> Đang hoạt động</small>
+              </div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-icon" style="color: #10b981;">💰</div>
+              <div class="metric-info">
+                <span class="label">Doanh Thu Dự Kiến (MRR)</span>
+                <h3 id="stat-total-revenue">-- đ</h3>
+                <small class="hint">Tính theo tổng gói cước Active</small>
+              </div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-icon" style="color: #f59e0b;">📝</div>
+              <div class="metric-info">
+                <span class="label">Đơn Đăng Ký Mới</span>
+                <h3 id="stat-pending-regs">--</h3>
+                <small class="hint">Đang chờ Super Admin phê duyệt</small>
+              </div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-icon" style="color: #ef4444;">🎫</div>
+              <div class="metric-info">
+                <span class="label">Tickets Cần Xử Lý</span>
+                <h3 id="stat-open-tickets">--</h3>
+                <small class="hint">Yêu cầu hỗ trợ từ Client</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Charts / Summaries -->
+          <div class="dashboard-grid">
+            <div class="card">
+              <div class="card-header">
+                <h3>🚀 Doanh Nghiệp Mới Gia Nhập</h3>
+                <button class="btn btn-secondary btn-sm" onclick="switchTab('adm-tenants')">Xem tất cả</button>
+              </div>
+              <div class="card-body" style="padding: 0;">
+                <div id="overview-recent-clients"></div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <h3>🎫 Yêu Cầu Hỗ Trợ Chờ Trả Lời</h3>
+                <button class="btn btn-secondary btn-sm" onclick="switchTab('adm-tickets')">Xem tất cả</button>
+              </div>
+              <div class="card-body" style="padding: 0;">
+                <div id="overview-recent-tickets"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 2: QUẢN LÝ DOANH NGHIỆP (TENANTS) -->
+        <section id="adm-tenants" class="tab-pane">
+          <div class="panel-header">
+            <div>
+              <h2>Quản Lý Doanh Nghiệp Đa Thuê Bao (Tenants)</h2>
+              <p class="subtitle">Quản lý cách ly dữ liệu, trạng thái hoạt động và cấu hình quota cho từng doanh nghiệp</p>
+            </div>
+            <button class="btn btn-primary" onclick="openCreateClientModal()">➕ Thêm Doanh Nghiệp Mới</button>
+          </div>
+
+          <div class="data-table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Mã Tenant</th>
+                  <th>Tên Doanh Nghiệp</th>
+                  <th>Tài Khoản Quản Trị</th>
+                  <th>Gói Cước</th>
+                  <th>Nhân Sự</th>
+                  <th>Tài Liệu RAG</th>
+                  <th>Trạng Thái</th>
+                  <th>Thao Tác</th>
+                </tr>
+              </thead>
+              <tbody id="clients-table-body">
+                <tr><td colspan="8" style="text-align: center; color: var(--text-muted);">Đang tải danh sách doanh nghiệp...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- TAB 3: QUẢN LÝ GÓI CƯỚC (SUBSCRIPTION PLANS) -->
+        <section id="adm-plans" class="tab-pane">
+          <div class="panel-header">
+            <div>
+              <h2>Quản Lý Gói Dịch Vụ & Bảng Giá (Subscription Plans)</h2>
+              <p class="subtitle">Thiết lập giới hạn Quota nhân sự, tài liệu AI và giá bán hiển thị trên Landing Page</p>
+            </div>
+            <button class="btn btn-primary" onclick="openCreatePlanModal()">➕ Tạo Gói Cước Mới</button>
+          </div>
+
+          <div class="data-table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Mã Gói</th>
+                  <th>Tên Gói</th>
+                  <th>Giá Cước (VNĐ)</th>
+                  <th>Thời Hạn (Ngày)</th>
+                  <th>Max Nhân Viên</th>
+                  <th>Max File RAG</th>
+                  <th>Mô Tả</th>
+                  <th>Hành Động</th>
+                </tr>
+              </thead>
+              <tbody id="plans-table-body">
+                <tr><td colspan="8" style="text-align: center; color: var(--text-muted);">Đang tải danh sách gói cước...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- TAB 4: DUYỆT ĐĂNG KÝ GÓI (CLIENT REGISTRATIONS) -->
+        <section id="adm-registrations" class="tab-pane">
+          <div class="panel-header">
+            <div>
+              <h2>Hồ Sơ Đăng Ký Gói Cước Từ Website Công Khai</h2>
+              <p class="subtitle">Khách hàng gửi đăng ký từ Website Landing Page (Port 3000) cần Super Admin phê duyệt</p>
+            </div>
+            <button class="btn btn-secondary" onclick="loadClientRegistrations()">🔄 Làm Mới</button>
+          </div>
+
+          <div class="data-table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Tên Doanh Nghiệp</th>
+                  <th>Email</th>
+                  <th>Số Điện Thoại</th>
+                  <th>Tên Miền</th>
+                  <th>Gói Đăng Ký</th>
+                  <th>Trạng Thái</th>
+                  <th>Ngày Đăng Ký</th>
+                  <th>Xử Lý</th>
+                </tr>
+              </thead>
+              <tbody id="registrations-table-body">
+                <tr><td colspan="8" style="text-align: center; color: var(--text-muted);">Đang tải danh sách hồ sơ...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- TAB 5: TRUNG TÂM HỖ TRỢ (SUPPORT TICKETS) -->
+        <section id="adm-tickets" class="tab-pane">
+          <div class="panel-header">
+            <div>
+              <h2>Trung Tâm Hỗ Trợ Kỹ Thuật Cho Doanh Nghiệp</h2>
+              <p class="subtitle">Phản hồi và hỗ trợ các vấn đề tích hợp Chatbot AI, Quota, và API từ Client</p>
+            </div>
+            <button class="btn btn-secondary" onclick="loadSupportTickets()">🔄 Làm Mới Tickets</button>
+          </div>
+
+          <div class="data-table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Mã Ticket</th>
+                  <th>Mã Tenant</th>
+                  <th>Tiêu Đề Yêu Cầu</th>
+                  <th>Ngày Tạo</th>
+                  <th>Trạng Thái</th>
+                  <th>Số Phản Hồi</th>
+                  <th>Hành Động</th>
+                </tr>
+              </thead>
+              <tbody id="tickets-table-body">
+                <tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Đang tải danh sách tickets...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- TAB 6: NHẬT KÝ API CONSOLE -->
+        <section id="adm-logs" class="tab-pane">
+          <div class="panel-header">
+            <div>
+              <h2>Nhật Ký Gọi API Trực Tiếp (Admin Live Audit)</h2>
+              <p class="subtitle">Theo dõi các HTTP Request và Response giữa Admin Dashboard và Backend Express</p>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="document.getElementById('logs-container').innerHTML=''">Xóa Nhật Ký</button>
+          </div>
+          <div id="logs-container" class="logs-console"></div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- MODAL: THÊM DOANH NGHIỆP MỚI -->
+  <div id="modal-create-client" class="modal-overlay">
+    <div class="modal-box">
+      <h3 style="margin-bottom: 1.25rem;">🏢 Thêm Doanh Nghiệp Mới</h3>
+      <div style="display: flex; flex-direction: column; gap: 0.9rem;">
+        <div>
+          <label style="font-size: 0.85rem; color: var(--text-muted);">Tên Doanh Nghiệp / Công Ty:</label>
+          <input type="text" id="new-client-name" placeholder="VD: Bất Động Sản Phúc Khang">
+        </div>
+        <div>
+          <label style="font-size: 0.85rem; color: var(--text-muted);">Email Quản Trị:</label>
+          <input type="email" id="new-client-email" placeholder="VD: contact@phuckhang.com">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+          <div>
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Username:</label>
+            <input type="text" id="new-client-username" placeholder="phuckhang_admin">
+          </div>
+          <div>
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Password:</label>
+            <input type="password" id="new-client-password" placeholder="Pass123@">
+          </div>
+        </div>
+        <div>
+          <label style="font-size: 0.85rem; color: var(--text-muted);">Gói Dịch Vụ Áp Dụng:</label>
+          <select id="new-client-plan" style="width: 100%; background: var(--bg-input); color: #fff; border: 1px solid var(--border-color); padding: 0.75rem; border-radius: var(--radius-md);"></select>
+        </div>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+        <button class="btn btn-secondary" onclick="closeModal('modal-create-client')">Hủy Bỏ</button>
+        <button class="btn btn-primary" onclick="submitCreateClient()">Khởi Tạo Doanh Nghiệp</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: TẠO / SỬA GÓI CƯỚC -->
+  <div id="modal-plan" class="modal-overlay">
+    <div class="modal-box">
+      <h3 id="modal-plan-title" style="margin-bottom: 1.25rem;">💳 Tạo Gói Cước Mới</h3>
+      <input type="hidden" id="plan-edit-id">
+      <div style="display: flex; flex-direction: column; gap: 0.9rem;">
+        <div>
+          <label style="font-size: 0.85rem; color: var(--text-muted);">Tên Gói:</label>
+          <input type="text" id="plan-name" placeholder="VD: Enterprise VIP">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+          <div>
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Giá Gói (VNĐ):</label>
+            <input type="number" id="plan-price" placeholder="2500000">
+          </div>
+          <div>
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Thời Hạn (Ngày):</label>
+            <input type="number" id="plan-duration" value="30">
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+          <div>
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Max Nhân Viên (User Quota):</label>
+            <input type="number" id="plan-users" value="10">
+          </div>
+          <div>
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Max File RAG (File Quota):</label>
+            <input type="number" id="plan-files" value="25">
+          </div>
+        </div>
+        <div>
+          <label style="font-size: 0.85rem; color: var(--text-muted);">Mô Tả Gói:</label>
+          <input type="text" id="plan-desc" placeholder="Dành cho doanh nghiệp quy mô lớn...">
+        </div>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+        <button class="btn btn-secondary" onclick="closeModal('modal-plan')">Hủy</button>
+        <button class="btn btn-primary" onclick="submitPlan()">Lưu Gói Cước</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: PHẢN HỒI TICKET HỖ TRỢ -->
+  <div id="modal-ticket" class="modal-overlay">
+    <div class="modal-box" style="width: 600px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h3 id="ticket-modal-title">🎫 Chi Tiết Ticket #TCK</h3>
+        <span id="ticket-modal-status" class="badge">Open</span>
+      </div>
+      <p id="ticket-modal-subject" style="font-weight: 600; color: #60a5fa; margin-bottom: 0.75rem;"></p>
+      
+      <div id="ticket-responses-box" class="ticket-responses"></div>
+
+      <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+        <textarea id="ticket-reply-text" rows="3" placeholder="Nhập câu trả lời chính thức từ Super Admin gửi đến Client..."></textarea>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <button id="btn-toggle-ticket-status" class="btn btn-secondary btn-sm" onclick="toggleCurrentTicketStatus()">Đóng Ticket</button>
+          <div style="display: flex; gap: 0.5rem;">
+            <button class="btn btn-secondary" onclick="closeModal('modal-ticket')">Đóng</button>
+            <button class="btn btn-primary" onclick="submitTicketReply()">Gửi Phản Hồi</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="admin.js"></script>
+</body>
+</html>

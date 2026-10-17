@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HomeNest Smart Living - Demo Website Tích Hợp Chatbot AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .store-header {
+      background: #0f172a;
+      border-bottom: 1px solid var(--border-color);
+      padding: 1rem 3rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .store-hero {
+      background: radial-gradient(circle at top right, #1e3a5f, #0b0f19);
+      padding: 3.5rem 2rem;
+      text-align: center;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .store-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 3rem 2rem;
+    }
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+    .store-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .store-card:hover {
+      transform: translateY(-4px);
+      border-color: #3b82f6;
+    }
+    .store-card img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+    }
+    .store-card-body {
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+    .store-card-title {
+      font-weight: 700;
+      font-size: 1.05rem;
+      margin-bottom: 0.35rem;
+    }
+    .store-card-price {
+      color: #f59e0b;
+      font-weight: 800;
+      font-size: 1.15rem;
+      margin-bottom: 0.75rem;
+    }
+    .store-card-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+      flex: 1;
+    }
+    .demo-bar {
+      background: #1e293b;
+      border: 1px dashed #3b82f6;
+      border-radius: var(--radius-md);
+      padding: 1rem 1.5rem;
+      margin-bottom: 2.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="store-header">
+    <div style="display: flex; align-items: center; gap: 0.75rem;">
+      <div class="logo-badge" style="background: linear-gradient(135deg, #10b981, #059669);">HN</div>
+      <div>
+        <h2 style="font-size: 1.2rem; font-weight: 700; margin: 0;">HomeNest Smart Living</h2>
+        <span style="font-size: 0.78rem; color: #10b981;">Website Khách Hàng Tích Hợp Chatbot (Mã Tenant: HN-DEMO-001)</span>
+      </div>
+    </div>
+    <div style="display: flex; gap: 0.75rem;">
+      <a href="http://localhost:5000/client.html" target="_blank" class="btn btn-secondary btn-sm">🏢 Mở Dashboard Doanh Nghiệp ↗</a>
+      <a href="http://localhost:5000/admin.html" target="_blank" class="btn btn-secondary btn-sm">👑 Mở Super Admin ↗</a>
+      <a href="/" class="btn btn-primary btn-sm">🏠 Về Trang Đăng Ký Gói</a>
+    </div>
+  </header>
+
+  <!-- Store Hero -->
+  <section class="store-hero">
+    <span class="badge live" style="margin-bottom: 0.75rem; display: inline-block;">Live Demonstration Storefront</span>
+    <h1 style="font-size: 2.25rem; font-weight: 800; margin-bottom: 0.5rem;">Giải Pháp Thiết Bị Nhà Thông Minh Cao Cấp</h1>
+    <p style="color: var(--text-muted); max-width: 650px; margin: 0 auto;">
+      Website này minh họa cách một khách hàng thuê bao (Tenant) nhúng Go QuestX Chatbot Widget vào hệ thống bán hàng của họ.
+    </p>
+  </section>
+
+  <!-- Store Main -->
+  <main class="store-container">
+    <!-- Interactive Demo Bar -->
+    <div class="demo-bar">
+      <div>
+        <b style="color: #60a5fa;">💡 Kịch Bản Thử Nghiệm Chatbot:</b>
+        <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 2px;">
+          Bấm vào nút bên dưới để tự động mở Chatbot và kiểm tra tính năng:
+        </div>
+      </div>
+      <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+        <button class="btn btn-secondary btn-sm" onclick="testScenario('Tư vấn giúp tôi các thiết bị nhà thông minh')">🛍️ Gợi Ý Sản Phẩm</button>
+        <button class="btn btn-secondary btn-sm" onclick="testScenario('Chính sách bảo hành và lắp đặt tại nhà thế nào?')">📚 Tra Cứu RAG</button>
+        <button class="btn btn-danger btn-sm" onclick="testScenario('Dịch vụ hỗ trợ ở đây tệ quá, tôi rất bức xúc và muốn gặp quản lý!')">🚨 Thử Kích Hoạt Escalation</button>
+        <button class="btn btn-secondary btn-sm" onclick="testScenario('Tôi là Minh Quân, số điện thoại 0988776655 cần tư vấn')">🎯 Thu Thập Lead</button>
+      </div>
+    </div>
+
+    <!-- Product Catalog -->
+    <div class="panel-header">
+      <div>
+        <h2>Danh Mục Sản Phẩm Nổi Bật</h2>
+        <p class="subtitle">Đồng bộ tự động từ Catalog của Tenant HomeNest Real</p>
+      </div>
+    </div>
+
+    <div class="product-grid">
+      <!-- Card 1 -->
+      <div class="store-card">
+        <img src="https://images.unsplash.com/photo-1558002038-1055907df827?w=400" alt="Khóa Cửa Thông Minh">
+        <div class="store-card-body">
+          <div class="store-card-title">Khóa Cửa SmartLock Pro X1</div>
+          <div class="store-card-price">4.500.000 đ</div>
+          <p class="store-card-desc">Mở khóa vân tay FPC Thụy Điển, mã số ảo chống nhìn trộm, kết nối Wifi & App quản lý từ xa.</p>
+          <button class="btn btn-primary btn-sm" onclick="testScenario('Tôi muốn hỏi giá và chương trình khuyến mãi cho Khóa Cửa SmartLock Pro X1')">Tư Vấn Ngay Qua AI</button>
+        </div>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="store-card">
+        <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=400" alt="Robot Hút Bụi">
+        <div class="store-card-body">
+          <div class="store-card-title">Robot Hút Bụi Lau Nhà CleanBot AI</div>
+          <div class="store-card-price">6.890.000 đ</div>
+          <p class="store-card-desc">Lực hút siêu mạnh 5000Pa, định vị Laser LiDAR 3D, tự động giặt giẻ và sấy khô kháng khuẩn.</p>
+          <button class="btn btn-primary btn-sm" onclick="testScenario('CleanBot AI lực hút bao nhiêu và có tự động giặt giẻ không?')">Tư Vấn Ngay Qua AI</button>
+        </div>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="store-card">
+        <img src="https://images.unsplash.com/photo-1557804506-669a67965ba0?w=400" alt="Camera Giám Sát">
+        <div class="store-card-body">
+          <div class="store-card-title">Camera An Ninh AI 360 SmartCam</div>
+          <div class="store-card-price">1.250.000 đ</div>
+          <p class="store-card-desc">Độ phân giải 2K siêu nét, nhận diện người và thú cưng bằng AI, đàm thoại 2 chiều to rõ.</p>
+          <button class="btn btn-primary btn-sm" onclick="testScenario('Camera AI 360 có nhìn đêm màu và đàm thoại được không?')">Tư Vấn Ngay Qua AI</button>
+        </div>
+      </div>
+
+      <!-- Card 4 -->
+      <div class="store-card">
+        <img src="https://images.unsplash.com/photo-1507646227500-4d389b0012be?w=400" alt="Bộ Điều Khiển Trung Tâm">
+        <div class="store-card-body">
+          <div class="store-card-title">Hub Trung Tâm Zigbee HomeHub 3.0</div>
+          <div class="store-card-price">950.000 đ</div>
+          <p class="store-card-desc">Kết nối hơn 128 thiết bị cảm biến không dây, tự động kích hoạt kịch bản khi có người về nhà.</p>
+          <button class="btn btn-primary btn-sm" onclick="testScenario('Tôi muốn tư vấn bộ trung tâm HomeHub 3.0 kết nối cảm biến')">Tư Vấn Ngay Qua AI</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Embed Go QuestX Chatbot Widget -->
+  <script 
+    src="http://localhost:5000/widget.js" 
+    data-client-id="HN-DEMO-001" 
+    data-api-url="http://localhost:5000">
+  </script>
+
+  <script>
+    function testScenario(text) {
+      // Mở widget launcher nếu chưa mở
+      const launcher = document.querySelector('.gq-widget-launcher');
+      const container = document.querySelector('.gq-widget-container');
+      if (launcher && container && !container.classList.contains('active')) {
+        launcher.click();
+      }
+      setTimeout(() => {
+        if (window.gqSendPrompt) {
+          window.gqSendPrompt(text);
+        }
+      }, 300);
+    }
+  </script>
+</body>
+</html>

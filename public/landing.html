@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Go QuestX - Nền Tảng AI Chatbot Cho Doanh Nghiệp</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .landing-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.25rem 4rem;
+      background: rgba(11, 15, 25, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .landing-hero {
+      padding: 6rem 2rem 4rem;
+      text-align: center;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 1rem;
+      background: rgba(59, 130, 246, 0.15);
+      color: #60a5fa;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+    }
+    .hero-title {
+      font-size: 3.5rem;
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+      margin-bottom: 1.5rem;
+      background: linear-gradient(135deg, #ffffff 40%, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero-title span {
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero-subtitle {
+      font-size: 1.25rem;
+      color: var(--text-muted);
+      max-width: 720px;
+      margin: 0 auto 2.5rem;
+      line-height: 1.6;
+    }
+    .hero-cta {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+    }
+    .pricing-section {
+      padding: 5rem 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .section-header {
+      text-align: center;
+      margin-bottom: 3.5rem;
+    }
+    .section-header h2 {
+      font-size: 2.25rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+    }
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 2rem;
+    }
+    .pricing-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 2.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      transition: transform 0.3s ease, border-color 0.3s ease;
+    }
+    .pricing-card:hover {
+      transform: translateY(-6px);
+      border-color: #3b82f6;
+    }
+    .pricing-card.featured {
+      border: 2px solid #3b82f6;
+      box-shadow: 0 0 35px rgba(59, 130, 246, 0.25);
+    }
+    .pricing-badge {
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 800;
+      padding: 0.3rem 0.9rem;
+      border-radius: 9999px;
+      text-transform: uppercase;
+    }
+    .pricing-price {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: #fff;
+      margin: 1rem 0 1.5rem;
+    }
+    .pricing-features {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      flex: 1;
+    }
+    .pricing-features li {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.95rem;
+      color: #cbd5e1;
+    }
+    .pricing-features li::before {
+      content: "✓";
+      color: #10b981;
+      font-weight: 800;
+    }
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-box {
+      background: #131c2e;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      width: 540px;
+      max-width: 90vw;
+      padding: 2rem;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.6);
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="landing-header">
+    <div class="brand">
+      <div class="logo-badge">GQ</div>
+      <div class="brand-text">
+        <h1 style="font-size: 1.3rem; margin: 0;">Go QuestX</h1>
+        <span class="badge live">Multi-Tenant SaaS</span>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 1rem;">
+      <a href="#pricing" class="btn btn-secondary" style="font-size: 0.9rem;">Bảng Giá Gói Cước</a>
+      <a href="/store.html" class="btn btn-secondary" style="font-size: 0.9rem;" target="_blank">🛍️ Xem Store Tích Hợp ↗</a>
+      <a href="http://localhost:5000/client.html" class="btn btn-secondary" style="font-size: 0.9rem;" target="_blank">🏢 Dashboard Doanh Nghiệp ↗</a>
+      <a href="http://localhost:5000/admin.html" class="btn btn-primary" style="font-size: 0.9rem;" target="_blank">👑 Super Admin ↗</a>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="landing-hero">
+    <div class="hero-badge">⚡ Nền Tảng AI RAG & Livechat Đa Doanh Nghiệp</div>
+    <h1 class="hero-title">
+      Tự Động Hóa CSKH & Bán Hàng Với <span>AI Chatbot Đa Thuê Bao</span>
+    </h1>
+    <p class="hero-subtitle">
+      Tách biệt dữ liệu tuyệt đối giữa các Tenant, nạp tài liệu thông minh (RAG Pipeline), kết hợp nhân viên tiếp quản hội thoại (Human Agent Takeover) và thanh toán tự động qua VietQR.
+    </p>
+    <div class="hero-cta">
+      <a href="#pricing" class="btn btn-primary" style="padding: 0.85rem 2rem; font-size: 1.05rem;">🚀 Đăng Ký Dùng Gói Ngay</a>
+      <a href="/store.html" class="btn btn-secondary" style="padding: 0.85rem 1.75rem; font-size: 1.05rem;">Trải Nghiệm Store Mẫu</a>
+    </div>
+  </section>
+
+  <!-- Features Highlight -->
+  <section style="max-width: 1200px; margin: 0 auto 4rem; padding: 0 2rem;">
+    <div class="dashboard-grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">
+      <div class="card" style="padding: 1.75rem;">
+        <div style="font-size: 2.2rem; margin-bottom: 0.75rem;">🏢</div>
+        <h3 style="margin-bottom: 0.5rem;">Multi-Tenant Isolation</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Dữ liệu khách hàng, tài liệu RAG và nhân sự được mã hóa và cách ly tuyệt đối theo mã ClientId riêng biệt.</p>
+      </div>
+      <div class="card" style="padding: 1.75rem;">
+        <div style="font-size: 2.2rem; margin-bottom: 0.75rem;">🧠</div>
+        <h3 style="margin-bottom: 0.5rem;">RAG Vector Pipeline</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Tự động phân tách tài liệu PDF/Docx thành Vector Chunks, đối chiếu tìm kiếm ngữ nghĩa siêu tốc độ.</p>
+      </div>
+      <div class="card" style="padding: 1.75rem;">
+        <div style="font-size: 2.2rem; margin-bottom: 0.75rem;">🚨</div>
+        <h3 style="margin-bottom: 0.5rem;">Sentiment Escalation</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Phát hiện khách hàng bức xúc (-0.85), cảnh báo còi đỏ và chuyển tiếp cuộc trò chuyện cho nhân viên trực tiếp.</p>
+      </div>
+      <div class="card" style="padding: 1.75rem;">
+        <div style="font-size: 2.2rem; margin-bottom: 0.75rem;">💳</div>
+        <h3 style="margin-bottom: 0.5rem;">VietQR Thanh Toán Tức Thì</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Tự động sinh mã VietQR theo mã hóa đơn, ngân hàng bắn Webhook IPN kích hoạt gói ngay trong tích tắc.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing Section -->
+  <section id="pricing" class="pricing-section">
+    <div class="section-header">
+      <h2>Bảng Giá Các Gói Dịch Vụ SaaS</h2>
+      <p class="subtitle" style="font-size: 1.05rem;">Chọn gói cước phù hợp với quy mô doanh nghiệp và bắt đầu sử dụng ngay lập tức</p>
+    </div>
+
+    <div class="pricing-grid" id="pricing-plans-container">
+      <!-- Starter Plan -->
+      <div class="pricing-card">
+        <h3>Gói Khởi Nghiệp (Starter)</h3>
+        <p style="color: var(--text-muted); font-size: 0.88rem;">Phù hợp cho cửa hàng và doanh nghiệp nhỏ</p>
+        <div class="pricing-price">499.000 đ<span style="font-size: 0.9rem; color: var(--text-muted); font-weight: normal;"> /tháng</span></div>
+        <ul class="pricing-features">
+          <li>Tối đa <b>2 Tài khoản Nhân viên</b></li>
+          <li>Tối đa <b>5 Tài liệu RAG</b> (Vector Chunks)</li>
+          <li>Chatbot Widget không giới hạn tin nhắn</li>
+          <li>Thu thập Leads & Slot-filling tự động</li>
+          <li>Bộ lọc ngôn ngữ phản cảm cơ bản</li>
+        </ul>
+        <button class="btn btn-secondary" onclick="openRegistrationModal('starter_monthly')">Đăng Ký Gói Starter</button>
+      </div>
+
+      <!-- Pro Plan -->
+      <div class="pricing-card featured">
+        <span class="pricing-badge">🔥 Phổ Biến Nhất</span>
+        <h3>Gói Doanh Nghiệp (Pro)</h3>
+        <p style="color: var(--text-muted); font-size: 0.88rem;">Dành cho công ty vừa và các chuỗi bán hàng</p>
+        <div class="pricing-price">1.490.000 đ<span style="font-size: 0.9rem; color: var(--text-muted); font-weight: normal;"> /tháng</span></div>
+        <ul class="pricing-features">
+          <li>Tối đa <b>10 Tài khoản Nhân viên CSKH</b></li>
+          <li>Tối đa <b>20 Tài liệu RAG Chuyên Sâu</b></li>
+          <li>Tự động phát hiện <b>Sentiment Escalation</b></li>
+          <li>Optimistic Locking tiếp quản Livechat</li>
+          <li>Thẻ Băng Chuyền Sản Phẩm (Product Carousel)</li>
+          <li>Hỗ trợ kỹ thuật ưu tiên 24/7</li>
+        </ul>
+        <button class="btn btn-primary" onclick="openRegistrationModal('pro_monthly')">Đăng Ký Gói Pro</button>
+      </div>
+
+      <!-- Enterprise Plan -->
+      <div class="pricing-card">
+        <h3>Gói Tập Đoàn (Enterprise)</h3>
+        <p style="color: var(--text-muted); font-size: 0.88rem;">Quy mô lớn với nhu cầu tùy biến cao</p>
+        <div class="pricing-price">3.990.000 đ<span style="font-size: 0.9rem; color: var(--text-muted); font-weight: normal;"> /tháng</span></div>
+        <ul class="pricing-features">
+          <li>Tối đa <b>50 Tài khoản Nhân sự</b></li>
+          <li>Tối đa <b>100 Tài liệu RAG Dung Lượng Lớn</b></li>
+          <li>Web Crawler tự động cào dữ liệu định kỳ</li>
+          <li>Tích hợp API Webhook tùy biến</li>
+          <li>Cam kết SLA 99.9% Uptime</li>
+        </ul>
+        <button class="btn btn-secondary" onclick="openRegistrationModal('enterprise_monthly')">Đăng Ký Gói Enterprise</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- MODAL: ĐĂNG KÝ DOANH NGHIỆP DÙNG GÓI -->
+  <div id="modal-register" class="modal-overlay">
+    <div class="modal-box">
+      <h3 style="margin-bottom: 0.5rem; font-size: 1.35rem;">🚀 Đăng Ký Tài Khoản Doanh Nghiệp</h3>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+        Hệ thống sẽ khởi tạo mã Tenant và kích hoạt Bảng điều khiển ngay sau khi đăng ký
+      </p>
+
+      <div style="display: flex; flex-direction: column; gap: 0.85rem;">
+        <div>
+          <label style="font-size: 0.85rem; color: var(--text-muted);">Tên Doanh Nghiệp / Công Ty *</label>
+          <input type="text" id="reg-company" placeholder="VD: Bất Động Sản Minh Phát">
+        </div>
+        <div>
+          <label style="font-size: 0.85rem; color: var(--text-muted);">Email Doanh Nghiệp *</label>
+          <input type="email" id="reg-email" placeholder="contact@minhphat.vn">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+          <div>
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Tên đăng nhập *</label>
+            <input type="text" id="reg-username" placeholder="minhphat_owner">
+          </div>
+          <div>
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Mật khẩu *</label>
+            <input type="password" id="reg-password" placeholder="Pass123@">
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+          <div>
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Số Điện Thoại</label>
+            <input type="text" id="reg-phone" placeholder="0912345678">
+          </div>
+          <div>
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Tên Miền Website</label>
+            <input type="text" id="reg-domain" placeholder="minhphat.vn">
+          </div>
+        </div>
+        <div>
+          <label style="font-size: 0.85rem; color: var(--text-muted);">Gói Dịch Vụ Đã Chọn</label>
+          <select id="reg-plan-select" style="width: 100%; background: var(--bg-input); color: #fff; border: 1px solid var(--border-color); padding: 0.75rem; border-radius: var(--radius-md);">
+            <option value="starter_monthly">Gói Starter - 499.000 đ/tháng</option>
+            <option value="pro_monthly" selected>Gói Pro - 1.490.000 đ/tháng</option>
+            <option value="enterprise_monthly">Gói Enterprise - 3.990.000 đ/tháng</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+        <button class="btn btn-secondary" onclick="closeModal('modal-register')">Hủy</button>
+        <button class="btn btn-primary" onclick="submitClientRegistration()">Tiếp Tục Thanh Toán VietQR ➔</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: VIETQR THANH TOÁN & VÀO DASHBOARD -->
+  <div id="modal-payment-success" class="modal-overlay">
+    <div class="modal-box" style="text-align: center; width: 560px;">
+      <h3 style="color: #10b981; margin-bottom: 0.5rem; font-size: 1.35rem;">🎉 Đăng Ký Doanh Nghiệp Thành Công!</h3>
+      <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+        Mã Tenant của bạn: <b id="pay-client-id" class="code-tag">HN-XXXXXX</b> • Gói: <b id="pay-plan-name" style="color: #60a5fa;">Pro Plan</b>
+      </p>
+
+      <div style="background: #fff; padding: 1rem; border-radius: 12px; display: inline-block; margin-bottom: 1rem;">
+        <img id="pay-qr-image" src="" alt="VietQR" style="width: 220px; height: 220px; display: block;">
+      </div>
+
+      <div style="text-align: left; background: #090d16; padding: 1rem; border-radius: 8px; font-size: 0.88rem; margin-bottom: 1.25rem;">
+        <div><b>Ngân hàng:</b> MB Bank (Quân Đội) - Số tài khoản: <b>0339888999</b></div>
+        <div><b>Chủ tài khoản:</b> HOMENEST SAAS</div>
+        <div><b>Số tiền thanh toán:</b> <span id="pay-amount" style="color: #f59e0b; font-weight: 700;">1.490.000 đ</span></div>
+        <div><b>Nội dung chuyển tiền:</b> <code id="pay-memo" style="color: #60a5fa;">INV-12345</code></div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <button id="btn-enter-dashboard" class="btn btn-primary" style="padding: 0.85rem; font-size: 1rem;" onclick="enterClientDashboard()">
+          🚀 Vào Ngay Bảng Điều Khiển Doanh Nghiệp
+        </button>
+        <button class="btn btn-secondary btn-sm" onclick="closeModal('modal-payment-success')">Đóng Cửa Sổ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer style="text-align: center; padding: 3rem 2rem; border-top: 1px solid var(--border-color); color: var(--text-muted); font-size: 0.9rem;">
+    <div>Go QuestX Multi-Tenant SaaS Platform © 2026. All rights reserved.</div>
+    <div style="display: flex; justify-content: center; gap: 1.5rem; margin-top: 0.75rem;">
+      <a href="http://localhost:5000/admin.html" target="_blank" style="color: #60a5fa; text-decoration: none;">👑 Super Admin</a>
+      <a href="http://localhost:5000/client.html" target="_blank" style="color: #60a5fa; text-decoration: none;">🏢 Tenant Dashboard</a>
+      <a href="/store.html" target="_blank" style="color: #60a5fa; text-decoration: none;">🛍️ Demo E-Commerce Store</a>
+      <a href="http://localhost:5000/api-docs" target="_blank" style="color: #60a5fa; text-decoration: none;">📖 API Docs</a>
+    </div>
+  </footer>
+
+  <script src="landing.js"></script>
+</body>
+</html>
