@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Go QuestX SaaS - Live Demo Playground</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="logo-badge">GQ</div>
+        <div class="brand-text">
+          <h1>Go QuestX SaaS</h1>
+          <span class="badge live">Backend Live Demo</span>
+        </div>
+      </div>
+      <div class="header-nav">
+        <button class="nav-tab active" data-tab="tab-client">🏢 1. Client Tenant Dashboard</button>
+        <button class="nav-tab" data-tab="tab-widget">💬 2. End-User Chatbot Widget</button>
+        <button class="nav-tab" data-tab="tab-admin">👑 3. Super Admin Portal</button>
+        <button class="nav-tab" data-tab="tab-logs">⚡ 4. API Logs Console</button>
+      </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="main-content">
+
+      <!-- TAB 1: CLIENT TENANT DASHBOARD -->
+      <section id="tab-client" class="tab-pane active">
+        <div class="panel-header">
+          <div>
+            <h2>Bảng Điều Khiển Doanh Nghiệp (Tenant Dashboard)</h2>
+            <p class="subtitle">Định danh Tenant: <span id="client-badge-id" class="code-tag">HN-DEMO-001</span> | Công ty: <b id="client-name-display">HomeNest Real</b></p>
+          </div>
+          <div class="status-indicators">
+            <span id="client-plan-badge" class="badge plan">Pro Plan</span>
+            <span id="client-status-badge" class="badge success">Active</span>
+          </div>
+        </div>
+
+        <!-- Quota Stats Cards -->
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-icon">👥</div>
+            <div class="metric-info">
+              <span class="label">Nhân sự (Quota)</span>
+              <h3 id="stat-users">1 / 10</h3>
+              <div class="progress-bar"><div id="progress-users" class="fill" style="width: 10%"></div></div>
+            </div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-icon">📚</div>
+            <div class="metric-info">
+              <span class="label">Tài liệu RAG (Quota)</span>
+              <h3 id="stat-files">1 / 20</h3>
+              <div class="progress-bar"><div id="progress-files" class="fill" style="width: 5%"></div></div>
+            </div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-icon">🎯</div>
+            <div class="metric-info">
+              <span class="label">Khách tiềm năng (Leads)</span>
+              <h3 id="stat-leads">1 Leads</h3>
+              <small class="hint">Tự động bắt từ chat</small>
+            </div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-icon">⏳</div>
+            <div class="metric-info">
+              <span class="label">Hạn dùng Gói</span>
+              <h3 id="stat-days">30 ngày</h3>
+              <small class="hint">Đến: <span id="stat-end-date">...</span></small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Grid 2 Cột -->
+        <div class="dashboard-grid">
+          <!-- Cột Trái: Quản lý Tri thức RAG & Upload -->
+          <div class="card">
+            <div class="card-header">
+              <h3>📂 1. Quản Lý Tri Thức AI (RAG Pipeline)</h3>
+              <span class="badge info">AC 3.1 & 3.2</span>
+            </div>
+            <div class="card-body">
+              <div class="upload-zone">
+                <input type="text" id="rag-file-name" placeholder="Tên tài liệu (VD: Chinh_Sach_Giam_Gia_2026.pdf)">
+                <textarea id="rag-file-content" rows="3" placeholder="Nhập nội dung văn bản để AI băm Vector (VD: Khách hàng mua trong tuần này được tặng chuyến du lịch Phú Quốc trị giá 20 triệu)..."></textarea>
+                <button id="btn-upload-file" class="btn btn-primary">📤 Tải lên & Kích hoạt AI băm Vector</button>
+              </div>
+
+              <h4 class="mt-4">Danh sách tài liệu đã nạp:</h4>
+              <div id="files-list" class="item-list"></div>
+            </div>
+          </div>
+
+          <!-- Cột Phải: Livechat Console (Human Handoff, Sentiment Alert & AI Writing Assistant) -->
+          <div class="card" id="card-livechat-console">
+            <div class="card-header">
+              <h3>🎧 2. Livechat CSKH & Chuyển Giao Nhân Viên</h3>
+              <span id="sentiment-badge" class="badge warning">Optimistic Lock (HTTP 409)</span>
+            </div>
+            <div class="card-body">
+              <p class="text-muted">Khi khách hàng cần tư vấn hoặc cảm xúc tiêu cực, nhân viên có thể bấm <b>Nhận ca chat</b>. Bot AI sẽ tự động "ngủ đông" (Bot Silence).</p>
+              
+              <div class="handoff-actions">
+                <button id="btn-take-session" class="btn btn-accent">⚡ Nhận ca chat (Take Session)</button>
+                <button id="btn-resolve-session" class="btn btn-outline">✅ Kết thúc ca (Chuyển lại cho AI)</button>
+              </div>
+              <div id="handoff-status" class="alert-box">Trạng thái: <b>Bot AI đang tự động trả lời</b></div>
+
+              <!-- AI Writing Assistant (PRD BA-12) -->
+              <div class="ai-assistant-wrapper mt-3">
+                <div class="staff-reply-box">
+                  <input type="text" id="staff-reply-input" placeholder="Nhập tin nhắn (VD: mai anh qua xem nha, hoặc thử gõ từ cấm 'cam kết lời 100%')...">
+                  <button id="btn-ai-polish" class="btn btn-outline" title="AI tự động sửa chính tả và nâng chuẩn văn phong">✨ AI Polish</button>
+                  <button id="btn-staff-send" class="btn btn-primary">Gửi</button>
+                </div>
+                <div id="ai-polish-preview" class="polish-card" style="display: none;">
+                  <div class="polish-header">
+                    <span>✨ Gợi ý từ AI Writing Assistant:</span>
+                    <span id="polish-tone-badge" class="badge info">Chuyên nghiệp</span>
+                  </div>
+                  <p id="polish-suggested-text" class="polish-content"></p>
+                  <button id="btn-apply-polish" class="btn btn-sm btn-primary">Áp Dụng Câu Này</button>
+                </div>
+              </div>
+
+              <h4 class="mt-4">Danh sách Leads khách hàng thu thập được:</h4>
+              <div id="leads-list" class="item-list"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section: Lỗ Hổng Kiến Thức & AI Auto-learning (PRD BA-01) -->
+        <div class="card mt-4">
+          <div class="card-header">
+            <h3>🧠 3. Lỗ Hổng Kiến Thức Tự Động (AI Auto-learning & Knowledge Gaps)</h3>
+            <span class="badge info">Human-in-the-loop (PRD BA-01)</span>
+          </div>
+          <div class="card-body">
+            <p class="text-muted">Hệ thống tự động gom cụm các câu hỏi FAQ mà khách hàng quan tâm nhưng Bot chưa có dữ liệu trả lời (Fallback). Doanh nghiệp chỉ cần 1 cú click để bổ sung kiến thức.</p>
+            <div id="knowledge-gaps-list" class="item-list"></div>
+          </div>
+        </div>
+
+        <!-- Section: Nâng cấp gói & VietQR Payment -->
+        <div class="card mt-4">
+          <div class="card-header">
+            <h3>💳 4. Nâng Cấp Gói Cước & Thanh Toán VietQR Tự Động (PRD BA-04)</h3>
+            <span class="badge success">NAPAS 247 Dynamic QR</span>
+          </div>
+          <div class="card-body billing-section">
+            <div class="billing-control">
+              <label>Chọn gói cước cần gia hạn / nâng cấp:</label>
+              <select id="select-plan-upgrade">
+                <option value="plan_pro">Pro Enterprise Plan - 499.000 VNĐ / tháng</option>
+                <option value="plan_basic">Basic Plan - 199.000 VNĐ / tháng</option>
+              </select>
+              <button id="btn-create-invoice" class="btn btn-primary">Tạo Hóa Đơn & Sinh Mã VietQR Động</button>
+            </div>
+            <div id="qr-result-box" class="qr-display" style="display: none;">
+              <div class="qr-image-wrapper">
+                <img id="vietqr-img" src="" alt="Mã VietQR Động">
+              </div>
+              <div class="qr-details">
+                <h4 id="qr-memo">Mã đơn hàng: INV-XXXXX</h4>
+                <p id="qr-amount" class="price-highlight">Số tiền: 499.000 VNĐ</p>
+                <p class="text-muted">Quét mã QR bằng App ngân hàng bất kỳ để chuyển khoản. Hệ thống sẽ bắt IPN Webhook và tự động gia hạn.</p>
+                <div class="ipn-sim">
+                  <button id="btn-sim-ipn" class="btn btn-success">⚡ Giả Lập Ngân Hàng Gửi IPN Webhook (Khớp 100%)</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: LIVE CHATBOT WIDGET -->
+      <section id="tab-widget" class="tab-pane">
+        <div class="widget-demo-wrapper">
+          <div class="demo-sidebar">
+            <h3>🧪 Kịch Bản Thử Nghiệm Chatbot:</h3>
+            <div class="test-scenarios">
+              <button class="btn btn-scenario" onclick="fillChat('Căn hộ 2 phòng ngủ giá bao nhiêu?')">
+                <b>1. Hỏi RAG:</b> "Căn hộ 2 phòng ngủ giá bao nhiêu?"
+                <small>👉 Bot tìm Vector trong tài liệu trả lời 2.8 tỷ</small>
+              </button>
+              <button class="btn btn-scenario" onclick="fillChat('Tôi muốn mua căn hộ và xem bảng giá')">
+                <b>2. Thử Slot-filling:</b> "Tôi muốn mua căn hộ"
+                <small>👉 Bot nhận diện ý định mua và tự hỏi xin SĐT</small>
+              </button>
+              <button class="btn btn-scenario" onclick="fillChat('Số điện thoại của tôi là 0988776655')">
+                <b>3. Lead Capture:</b> "Số điện thoại của tôi là 0988776655"
+                <small>👉 Bot tự động bắt SĐT lưu vào bảng Khách hàng</small>
+              </button>
+              <button class="btn btn-scenario" onclick="fillChat('Đồ lừa đảo ngu ngốc này!')">
+                <b>4. Profanity Filter:</b> "Đồ lừa đảo ngu ngốc này!"
+                <small>👉 Bot phát hiện từ cấm và từ chối lịch sự</small>
+              </button>
+              <button class="btn btn-scenario" onclick="fillChat('Chính sách bảo hành tủ lạnh thế nào?')">
+                <b>5. Fallback & Gap:</b> "Chính sách bảo hành tủ lạnh thế nào?"
+                <small>👉 Bot không có dữ liệu, lưu vào unanswered_faqs</small>
+              </button>
+              <button class="btn btn-scenario" onclick="fillChat('Cho tôi xem danh sách các căn hộ đang bán')">
+                <b>6. Conversational Commerce:</b> "Cho tôi xem danh sách căn hộ"
+                <small>👉 Bot trả về thẻ Carousel sản phẩm Rich-UI (Ảnh, Giá, Nút Mua)</small>
+              </button>
+              <button class="btn btn-scenario" onclick="fillChat('Làm ăn quá tệ, cho tôi gặp người thật ngay!')">
+                <b>7. Cảm xúc tiêu cực (Escalation):</b> "Làm ăn tệ quá, gặp người thật!"
+                <small>👉 Nhận diện Sentiment < -0.5, bật chuông báo khẩn cấp cho nhân viên</small>
+              </button>
+            </div>
+          </div>
+
+          <!-- Phone Mockup for Widget -->
+          <div class="phone-mockup">
+            <div class="chat-widget-box">
+              <div class="widget-header">
+                <div class="avatar"><img id="widget-avatar" src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100" alt="Avatar"></div>
+                <div>
+                  <h4 id="widget-title">HomeNest AI Assistant</h4>
+                  <small id="widget-subtitle">● Đang trực tuyến</small>
+                </div>
+              </div>
+              <div id="chat-messages" class="chat-messages">
+                <!-- Tin nhắn mẫu khởi đầu -->
+                <div class="msg bot">
+                  <div class="bubble" id="widget-welcome">Xin chào! Em là Trợ lý AI HomeNest. Anh/Chị muốn tìm hiểu về căn hộ 2 phòng ngủ hay bảng giá ưu đãi tháng này ạ?</div>
+                </div>
+              </div>
+              <div class="chat-input-bar">
+                <input type="text" id="widget-input" placeholder="Nhập câu hỏi của bạn...">
+                <button id="btn-widget-send" class="btn btn-send">➤</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: SUPER ADMIN PORTAL -->
+      <section id="tab-admin" class="tab-pane">
+        <div class="panel-header">
+          <div>
+            <h2>Super Admin Portal (Homenest Quản Trị)</h2>
+            <p class="subtitle">Quản trị toàn bộ các doanh nghiệp (Clients), phân phối gói cước và kiểm soát hệ thống SaaS</p>
+          </div>
+          <button id="btn-admin-refresh" class="btn btn-outline">🔄 Làm mới dữ liệu</button>
+        </div>
+
+        <div class="dashboard-grid">
+          <div class="card">
+            <div class="card-header">
+              <h3>➕ Cấp Phát Doanh Nghiệp Mới (Onboarding Flow)</h3>
+              <span class="badge info">API POST /admin-api/clients</span>
+            </div>
+            <div class="card-body">
+              <form id="form-create-client" class="form-grid">
+                <div>
+                  <label>Tên Doanh Nghiệp (Client):</label>
+                  <input type="text" id="adm-client-name" placeholder="VD: Công ty Bất Động Sản Á Châu" required>
+                </div>
+                <div>
+                  <label>Email liên hệ:</label>
+                  <input type="email" id="adm-client-email" placeholder="contact@achau.vn" required>
+                </div>
+                <div>
+                  <label>Tên đăng nhập:</label>
+                  <input type="text" id="adm-client-user" placeholder="achau_admin" required>
+                </div>
+                <div>
+                  <label>Mật khẩu khởi tạo:</label>
+                  <input type="password" id="adm-client-pass" value="AchauPass123" required>
+                </div>
+                <div>
+                  <label>Gói dịch vụ:</label>
+                  <select id="adm-client-plan">
+                    <option value="plan_pro">Pro Enterprise Plan (10 users, 20 files)</option>
+                    <option value="plan_basic">Basic Plan (2 users, 3 files)</option>
+                  </select>
+                </div>
+                <div class="full-width">
+                  <button type="submit" class="btn btn-primary">Tạo Tài Khoản & Cấp Phát ClientId Mới</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3>📋 Danh Sách Khách Hàng Doanh Nghiệp (Clients)</h3>
+              <span class="badge success">Multi-Tenant Isolation</span>
+            </div>
+            <div class="card-body">
+              <div id="admin-clients-list" class="item-list"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: API LOGS CONSOLE -->
+      <section id="tab-logs" class="tab-pane">
+        <div class="panel-header">
+          <div>
+            <h2>Nhật Ký Gọi API Thời Gian Thực (API Inspector)</h2>
+            <p class="subtitle">Dành riêng cho Backend Intern để theo dõi Request Payload, Headers và Response Status Code</p>
+          </div>
+          <button id="btn-clear-logs" class="btn btn-outline">Xóa nhật ký</button>
+        </div>
+
+        <div class="card">
+          <div class="card-body console-body">
+            <div id="logs-container" class="terminal-logs">
+              <div class="log-entry info">[SYSTEM] Sẵn sàng lắng nghe các lệnh gọi API từ hệ thống...</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
