@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
-import 'conversation_list_screen.dart';
+import 'home_screen.dart';
 
 /// Màn hình đăng nhập (Login Screen)
 /// Kế thừa StatefulWidget vì giao diện này có TRẠNG THÁI thay đổi (loading, lưu text nhập, báo lỗi)
@@ -45,11 +45,11 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     if (result['success'] == true) {
-      // Chuyển màn hình sang danh sách hội thoại CSKH (Navigator.pushReplacement)
+      // Chuyển màn hình sang trang chủ 4 tabs (HomeScreen)
       if (mounted) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const ConversationListScreen()),
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
         );
       }
     } else {
