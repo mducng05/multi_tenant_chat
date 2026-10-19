@@ -1,13 +1,17 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 /// Service quản lý toàn bộ việc gọi REST API từ Flutter tới Backend Node.js
 class ApiService {
-  // LƯU Ý KHI CHẠY:
-  // - Nếu chạy máy ảo Android Emulator: dùng 'http://10.0.2.2:5000'
-  // - Nếu chạy trên điện thoại thật cắm cáp: dùng IP máy tính của bạn (VD: 'http://192.168.1.15:5000')
-  // - Nếu chạy Flutter Web hoặc Windows App: dùng 'http://localhost:5000'
-  static const String baseUrl = 'http://10.0.2.2:5000';
+  // Tự động nhận diện môi trường chạy:
+  // - Chạy trên Web (Chrome) hoặc Windows App -> dùng http://localhost:5000
+  // - Chạy trên máy ảo Android -> dùng http://10.0.2.2:5000
+  static String get baseUrl {
+    if (kIsWeb) return 'http://localhost:5000';
+    if (defaultTargetPlatform == TargetPlatform.android) return 'http://10.0.2.2:5000';
+    return 'http://localhost:5000';
+  }
 
   // Lưu trữ Token sau khi đăng nhập thành công
   static String? authToken;
